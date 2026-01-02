@@ -4,11 +4,16 @@
     box-sizing: border-box;
 }
 
+html {
+    font-size: 15px; /* Set base font size untuk konsistensi */
+}
+
 body {
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #35a9bd 0%, #0d077f 100%);
     min-height: 100vh;
     padding: 20px;
+    line-height: 1; /* Tambahkan untuk readability */
 }
 
 .container {
@@ -23,7 +28,7 @@ header {
 
 header h1 {
     color: white;
-    font-size: 75px;
+    font-size: 5vw; /* Ubah dari 75px ke 5vw untuk scaling berdasarkan viewport */
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     margin-bottom: 20px;
 }
@@ -460,6 +465,7 @@ header h1 {
 }
 
 .detail-moves h4 {
+    margin: 5px 0;
     font-size: 1.1em;
     color: #000000;
 }
@@ -481,5 +487,11 @@ header h1 {
     .modal-content {
         width: 95%;
         margin: 20% auto;
+    }
+}
+
+@media (min-width: 1200px) {
+    header h1 {
+        font-size: 4em; /* Batasi maksimal */
     }
 }

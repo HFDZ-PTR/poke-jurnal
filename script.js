@@ -80,10 +80,11 @@ window.addEventListener('popstate', setupRouting);
 
 function setupRouting() {
     const path = window.location.pathname;
-    const pokemonMatch = path.match(/\/pokemon\/(.+)/);
+    const searchParams = new window.URLSearchParams(window.location.search);
+    const pokemonPath = searchParams.get('/'); // Untuk handle redirect dari 404.html
     
-    if (pokemonMatch) {
-        const pokemonName = decodeURIComponent(pokemonMatch[1]);
+    if (pokemonPath && pokemonPath.startsWith('pokemon/')) {
+        const pokemonName = decodeURIComponent(pokemonPath.split('/')[1]);
         const pokemon = allPokemon.find(p => p.name.toLowerCase() === pokemonName.toLowerCase());
         if (pokemon) {
             showDetailPage(pokemon);
@@ -91,7 +92,6 @@ function setupRouting() {
     } else {
         mainPage.style.display = 'block';
         detailPage.style.display = 'none';
-        
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
