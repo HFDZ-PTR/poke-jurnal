@@ -22,7 +22,7 @@ const pokemonTypes = [
 
 // ==========================================
 // REFERENSI ELEMEN DOM
-// Bagian ini menyimpan referensi ke elemen HTML yang akan dimanipulasi
+// Bagian ini menyimpan referensi ke elemen HTML yang akan di manipulasi
 // ==========================================
 
 // Elemen-elemen DOM yang digunakan dalam aplikasi
@@ -65,6 +65,9 @@ backBtn.addEventListener('click', () => {
     mainPage.style.display = 'block';
     detailPage.style.display = 'none';
     window.history.pushState(null, '', window.location.origin + window.location.pathname.split('/pokemon')[0]);
+    
+    // Scroll ke atas halaman utama dengan smooth animation
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 // Event listener untuk menggerakkan popup hover mengikuti mouse
@@ -97,6 +100,9 @@ function setupRouting() {
     } else {
         mainPage.style.display = 'block';
         detailPage.style.display = 'none';
+        
+        // Scroll ke atas halaman utama dengan smooth animation
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 
@@ -175,7 +181,7 @@ async function loadAndDisplayPokemon() {
 // Bagian ini menangani tampilan kartu Pokemon di grid utama
 // ==========================================
 
-// Fungsi untuk menampilkan batch berikutnya dari Pokemon yang sudah difilter
+// Fungsi untuk menampilkan batch berikutnya dari Pokemon yang sudah di filter
 function loadMoreDisplay() {
     let pokemonToDisplay = allPokemon;
     
@@ -350,13 +356,14 @@ function showDetailPage(pokemon) {
     mainPage.style.display = 'none';
     detailPage.style.display = 'block';
     window.history.pushState(null, '', `/pokemon/${pokemon.name}`);
+    
+    // Scroll ke atas halaman detail dengan smooth animation
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ==========================================
 // FUNGSI PENCARIAN
 // Bagian ini menangani fitur pencarian Pokemon
-// Pencarian nama: ketik nama Pokemon (contoh: "pikachu")
-// Pencarian ID: gunakan simbol # diikuti angka (contoh: "#25")
 // ==========================================
 
 // Fungsi untuk menangani pencarian Pokemon berdasarkan nama atau ID dengan simbol #
