@@ -1,7 +1,7 @@
-// URL untuk PokeAPI yang digunakan untuk mengambil data Pokemon
-// Script utama untuk aplikasi Pokédex
-// Aplikasi ini menggunakan PokeAPI untuk menampilkan daftar Pokemon dengan fitur pencarian, filter berdasarkan tipe, dan halaman detail.
-// Fitur utama: grid Pokemon, hover popup, routing untuk halaman detail, dan infinite scroll dengan load more.
+// ==========================================
+// KONSTANTA DAN VARIABEL GLOBAL
+// Bagian ini mendefinisikan konstanta API dan variabel untuk mengelola state aplikasi
+// ==========================================
 
 const API_URL = 'https://pokeapi.co/api/v2';
 // Batas jumlah Pokemon yang ditampilkan per batch
@@ -20,6 +20,11 @@ const pokemonTypes = [
     'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy'
 ];
 
+// ==========================================
+// REFERENSI ELEMEN DOM
+// Bagian ini menyimpan referensi ke elemen HTML yang akan dimanipulasi
+// ==========================================
+
 // Elemen-elemen DOM yang digunakan dalam aplikasi
 const pokemonGrid = document.getElementById('pokemonGrid');
 const searchInput = document.getElementById('searchInput');
@@ -35,10 +40,20 @@ const detailContent = document.getElementById('detailContent');
 // Flag untuk menandai apakah sedang hover pada kartu Pokemon
 let isHoveringCard = false;
 
+// ==========================================
+// INISIALISASI APLIKASI
+// Bagian ini menjalankan fungsi-fungsi awal untuk memuat data dan mengatur UI
+// ==========================================
+
 // Inisialisasi aplikasi: memuat data Pokemon, mengatur filter tipe, dan routing
 loadAndDisplayPokemon();
 initializeTypeFilters();
 setupRouting();
+
+// ==========================================
+// EVENT LISTENERS
+// Bagian ini menangani interaksi pengguna dengan aplikasi
+// ==========================================
 
 // Event listener untuk pencarian Pokemon
 searchInput.addEventListener('input', handleSearch);
@@ -63,6 +78,11 @@ document.addEventListener('mousemove', (e) => {
 // Event listener untuk menangani navigasi browser (back/forward)
 window.addEventListener('popstate', setupRouting);
 
+// ==========================================
+// FUNGSI ROUTING
+// Bagian ini menangani navigasi halaman berdasarkan URL
+// ==========================================
+
 // Fungsi untuk menangani routing berdasarkan URL path
 function setupRouting() {
     const path = window.location.pathname;
@@ -80,11 +100,16 @@ function setupRouting() {
     }
 }
 
+// ==========================================
+// FUNGSI FILTER TIPE
+// Bagian ini menangani filter berdasarkan tipe Pokemon
+// ==========================================
+
 // Fungsi untuk membuat tombol filter berdasarkan tipe Pokemon
 function initializeTypeFilters() {
     pokemonTypes.forEach(type => {
         const btn = document.createElement('button');
-        btn.className = 'filter-btn';
+        btn.className = `filter-btn type-${type}`;
         btn.textContent = type;
         btn.addEventListener('click', () => toggleTypeFilter(type, btn));
         typeFilter.appendChild(btn);
@@ -105,6 +130,11 @@ function toggleTypeFilter(type, btn) {
     displayedCount = 0;
     loadMoreDisplay();
 }
+
+// ==========================================
+// FUNGSI PEMUATAN DATA POKEMON
+// Bagian ini menangani pengambilan dan penyimpanan data Pokemon dari API
+// ==========================================
 
 // Fungsi untuk memuat semua data Pokemon dari API dan menampilkannya
 async function loadAndDisplayPokemon() {
@@ -140,6 +170,11 @@ async function loadAndDisplayPokemon() {
     }
 }
 
+// ==========================================
+// FUNGSI TAMPILAN GRID POKEMON
+// Bagian ini menangani tampilan kartu Pokemon di grid utama
+// ==========================================
+
 // Fungsi untuk menampilkan batch berikutnya dari Pokemon yang sudah difilter
 function loadMoreDisplay() {
     let pokemonToDisplay = allPokemon;
@@ -166,7 +201,10 @@ function loadMoreDisplay() {
     
     displayedCount += displayLimit;
     
-    if (displayedCount >= pokemonToDisplay.length && !isLoading) {
+    // Tampilkan tombol load more jika masih ada Pokemon yang belum ditampilkan
+    if (displayedCount < pokemonToDisplay.length) {
+        loadMoreBtn.style.display = 'block';
+    } else {
         loadMoreBtn.style.display = 'none';
     }
 }
@@ -202,6 +240,11 @@ function createPokemonCard(pokemon) {
     
     return card;
 }
+
+// ==========================================
+// FUNGSI HOVER POPUP
+// Bagian ini menangani tampilan popup saat hover pada kartu Pokemon
+// ==========================================
 
 // Fungsi untuk menampilkan popup hover dengan informasi Pokemon
 function showHoverPopup(pokemon, event) {
@@ -243,6 +286,11 @@ function hideHoverPopup() {
     hoverPopup.classList.remove('show');
 }
 
+// ==========================================
+// FUNGSI HALAMAN DETAIL
+// Bagian ini menangani tampilan halaman detail Pokemon
+// ==========================================
+
 // Fungsi untuk menampilkan halaman detail Pokemon
 function showDetailPage(pokemon) {
     const imageUrl = pokemon.sprites.other['official-artwork'].front_default || 
@@ -276,16 +324,25 @@ function showDetailPage(pokemon) {
             </div>
 
             <div class="detail-section">
+                <h3>Height & Weight</h3>
+                <p><strong>Height:</strong> ${(pokemon.height / 10).toFixed(1)} m</p>
+                <p><strong>Weight:</strong> ${(pokemon.weight / 10).toFixed(1)} kg</p>
+            </div>
+
+            <div class="detail-section">
                 <h3>Abilities</h3>
                 <div class="detail-abilities">
-                    ${pokemon.abilities.map(a => `<p>${a.ability.name}</p>`).join('')}
+                    ${pokemon.abilities.map(a => `<h4>${a.ability.name}</h4>`).join('')}
                 </div>
             </div>
 
             <div class="detail-section">
-                <h3>Height & Weight</h3>
-                <p><strong>Height:</strong> ${(pokemon.height / 10).toFixed(1)} m</p>
-                <p><strong>Weight:</strong> ${(pokemon.weight / 10).toFixed(1)} kg</p>
+                <h3>Moves</h3>
+                <div class="detail-moves">
+                    ${pokemon.moves
+                    .filter(m => m.version_group_details.some(v => v.move_learn_method.name === 'level-up'))
+                    .slice(0, 20).map(m => `<h4>${m.move.name}</h4>`).join('')}
+                </div>
             </div>
         </div>
     `;
@@ -295,7 +352,14 @@ function showDetailPage(pokemon) {
     window.history.pushState(null, '', `/pokemon/${pokemon.name}`);
 }
 
-// Fungsi untuk menangani pencarian Pokemon berdasarkan nama atau ID
+// ==========================================
+// FUNGSI PENCARIAN
+// Bagian ini menangani fitur pencarian Pokemon
+// Pencarian nama: ketik nama Pokemon (contoh: "pikachu")
+// Pencarian ID: gunakan simbol # diikuti angka (contoh: "#25")
+// ==========================================
+
+// Fungsi untuk menangani pencarian Pokemon berdasarkan nama atau ID dengan simbol #
 function handleSearch(e) {
     const searchTerm = e.target.value.toLowerCase();
     pokemonGrid.innerHTML = '';
@@ -311,10 +375,18 @@ function handleSearch(e) {
     }
     
     if (searchTerm !== '') {
-        filtered = filtered.filter(pokemon => 
-            pokemon.name.toLowerCase().includes(searchTerm) ||
-            String(pokemon.id).includes(searchTerm)
-        );
+        if (searchTerm.startsWith('#')) {
+            // Pencarian berdasarkan ID Pokemon (angka setelah #)
+            const idTerm = searchTerm.substring(1); // Hapus simbol #
+            filtered = filtered.filter(pokemon => 
+                String(pokemon.id).includes(idTerm)
+            );
+        } else {
+            // Pencarian berdasarkan nama Pokemon
+            filtered = filtered.filter(pokemon => 
+                pokemon.name.toLowerCase().includes(searchTerm)
+            );
+        }
     }
     
     filtered.forEach(pokemon => {

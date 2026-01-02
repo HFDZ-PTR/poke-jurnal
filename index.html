@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokédex</title>
+    <title>PokeJurnal</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,12 +11,12 @@
     <div id="mainPage" class="page">
         <div class="container">
             <header>
-                <h1>Pokédex</h1>
+                <h1>Poke - Jurnal</h1>
                 <div class="search-container">
                     <input 
                         type="text" 
                         id="searchInput" 
-                        placeholder="Search Pokémon by name or ID..."
+                        placeholder="Search Pokémon by name or use #ID (e.g., #25)"
                         autocomplete="off"
                     >
                 </div>
@@ -37,7 +37,7 @@
     <!-- Detail Page -->
     <div id="detailPage" class="page" style="display: none;">
         <div class="container">
-            <button id="backBtn" class="back-btn">← Back to Pokédex</button>
+            <button id="backBtn" class="back-btn">← Back to Search</button>
             <div id="detailContent"></div>
         </div>
     </div>

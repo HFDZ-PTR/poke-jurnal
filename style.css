@@ -1,3 +1,8 @@
+/* ==========================================
+   RESET DAN STYLING DASAR
+   Bagian ini mereset margin/padding default dan mengatur font serta background dasar
+   ========================================== */
+
 * {
     margin: 0;
     padding: 0;
@@ -6,7 +11,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #35a9bd 0%, #0d077f 100%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -16,6 +21,11 @@ body {
     margin: 0 auto;
 }
 
+/* ==========================================
+   HEADER DAN JUDUL APLIKASI
+   Bagian ini mengatur tampilan header dengan judul Pokédex
+   ========================================== */
+
 header {
     text-align: center;
     margin-bottom: 40px;
@@ -23,10 +33,15 @@ header {
 
 header h1 {
     color: white;
-    font-size: 3em;
+    font-size: 75px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     margin-bottom: 20px;
 }
+
+/* ==========================================
+   SEARCH INPUT
+   Bagian ini mengatur tampilan input pencarian Pokemon
+   ========================================== */
 
 .search-container {
     display: flex;
@@ -34,11 +49,11 @@ header h1 {
 }
 
 #searchInput {
-    padding: 12px 20px;
+    padding: 20px 20px;
     border: none;
     border-radius: 25px;
     width: 100%;
-    max-width: 400px;
+    max-width: 100%;
     font-size: 1em;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     transition: box-shadow 0.3s;
@@ -48,6 +63,11 @@ header h1 {
     outline: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+
+/* ==========================================
+   GRID DAN KARTU POKEMON
+   Bagian ini mengatur tampilan grid dan kartu Pokemon di halaman utama
+   ========================================== */
 
 .pokemon-grid {
     display: grid;
@@ -67,7 +87,7 @@ header h1 {
 }
 
 .pokemon-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-10px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
@@ -97,6 +117,11 @@ header h1 {
     flex-wrap: wrap;
 }
 
+/* ==========================================
+   TYPE BADGE
+   Bagian ini mengatur tampilan badge untuk tipe Pokemon
+   ========================================== */
+
 .type-badge {
     display: inline-block;
     padding: 4px 12px;
@@ -106,6 +131,11 @@ header h1 {
     color: white;
     text-transform: capitalize;
 }
+
+/* ==========================================
+   LOAD MORE BUTTON
+   Bagian ini mengatur tampilan tombol untuk memuat lebih banyak Pokemon
+   ========================================== */
 
 .load-more-btn {
     display: block;
@@ -125,7 +155,11 @@ header h1 {
     background-color: #5568d3;
 }
 
-/* Modal Styles */
+/* ==========================================
+   MODAL STYLES (TIDAK DIGUNAKAN)
+   Bagian ini berisi styling untuk modal yang tidak digunakan dalam versi saat ini
+   ========================================== */
+
 .modal {
     display: none;
     position: fixed;
@@ -202,7 +236,11 @@ header h1 {
     font-weight: bold;
 }
 
-/* Type Colors */
+/* ==========================================
+   WARNA TIPE POKEMON
+   Bagian ini mendefinisikan warna background untuk setiap tipe Pokemon
+   ========================================== */
+
 .type-normal { background-color: #A8A878; }
 .type-fire { background-color: #F08030; }
 .type-water { background-color: #6890F0; }
@@ -221,6 +259,11 @@ header h1 {
 .type-dark { background-color: #705848; }
 .type-steel { background-color: #B8B8D0; }
 .type-fairy { background-color: #EE99AC; }
+
+/* ==========================================
+   FILTER SECTION
+   Bagian ini mengatur tampilan section filter berdasarkan tipe Pokemon
+   ========================================== */
 
 .filter-section {
     background: white;
@@ -263,6 +306,66 @@ header h1 {
     background-color: #667eea;
 }
 
+/* Type-specific hover and active colors for filter buttons */
+.filter-btn.type-normal:hover { border-color: #A8A878; }
+.filter-btn.type-normal.active { background-color: #A8A878; border-color: #A8A878; }
+
+.filter-btn.type-fire:hover { border-color: #F08030; }
+.filter-btn.type-fire.active { background-color: #F08030; border-color: #F08030; }
+
+.filter-btn.type-water:hover { border-color: #6890F0; }
+.filter-btn.type-water.active { background-color: #6890F0; border-color: #6890F0; }
+
+.filter-btn.type-grass:hover { border-color: #78C850; }
+.filter-btn.type-grass.active { background-color: #78C850; border-color: #78C850; }
+
+.filter-btn.type-electric:hover { border-color: #F8D030; }
+.filter-btn.type-electric.active { background-color: #F8D030; border-color: #F8D030; }
+
+.filter-btn.type-ice:hover { border-color: #98D8D8; }
+.filter-btn.type-ice.active { background-color: #98D8D8; border-color: #98D8D8; }
+
+.filter-btn.type-fighting:hover { border-color: #C03028; }
+.filter-btn.type-fighting.active { background-color: #C03028; border-color: #C03028; }
+
+.filter-btn.type-poison:hover { border-color: #A040A0; }
+.filter-btn.type-poison.active { background-color: #A040A0; border-color: #A040A0; }
+
+.filter-btn.type-ground:hover { border-color: #E0C068; }
+.filter-btn.type-ground.active { background-color: #E0C068; border-color: #E0C068; }
+
+.filter-btn.type-flying:hover { border-color: #A890F0; }
+.filter-btn.type-flying.active { background-color: #A890F0; border-color: #A890F0; }
+
+.filter-btn.type-psychic:hover { border-color: #F85888; }
+.filter-btn.type-psychic.active { background-color: #F85888; border-color: #F85888; }
+
+.filter-btn.type-bug:hover { border-color: #A8B820; }
+.filter-btn.type-bug.active { background-color: #A8B820; border-color: #A8B820; }
+
+.filter-btn.type-rock:hover { border-color: #B8A038; }
+.filter-btn.type-rock.active { background-color: #B8A038; border-color: #B8A038; }
+
+.filter-btn.type-ghost:hover { border-color: #705898; }
+.filter-btn.type-ghost.active { background-color: #705898; border-color: #705898; }
+
+.filter-btn.type-dragon:hover { border-color: #7038F8; }
+.filter-btn.type-dragon.active { background-color: #7038F8; border-color: #7038F8; }
+
+.filter-btn.type-dark:hover { border-color: #705848; }
+.filter-btn.type-dark.active { background-color: #705848; border-color: #705848; }
+
+.filter-btn.type-steel:hover { border-color: #B8B8D0; }
+.filter-btn.type-steel.active { background-color: #B8B8D0; border-color: #B8B8D0; }
+
+.filter-btn.type-fairy:hover { border-color: #EE99AC; }
+.filter-btn.type-fairy.active { background-color: #EE99AC; border-color: #EE99AC; }
+
+/* ==========================================
+   PAGE DAN NAVIGASI
+   Bagian ini mengatur tampilan halaman dan tombol navigasi
+   ========================================== */
+
 .page {
     min-height: 100vh;
     padding: 20px;
@@ -284,6 +387,11 @@ header h1 {
 .back-btn:hover {
     background-color: #5568d3;
 }
+
+/* ==========================================
+   HOVER POPUP
+   Bagian ini mengatur tampilan popup yang muncul saat hover pada kartu Pokemon
+   ========================================== */
 
 .hover-popup {
     display: none;
@@ -326,6 +434,10 @@ header h1 {
     margin-bottom: 20px;
 }
 
+.popup-types .type-badge {
+    margin-right: 5px;
+}
+
 .popup-types h3 {
     color: #333;
     margin-bottom: 10px;
@@ -361,6 +473,11 @@ header h1 {
     color: #667eea;
     font-weight: bold;
 }
+
+/* ==========================================
+   DETAIL PAGE
+   Bagian ini mengatur tampilan halaman detail Pokemon
+   ========================================== */
 
 .detail-page-content {
     background: white;
@@ -398,7 +515,7 @@ header h1 {
 }
 
 .detail-section {
-    margin-bottom: 30px;
+    margin-bottom: 30px;;
 }
 
 .detail-section h3 {
@@ -409,15 +526,48 @@ header h1 {
     padding-bottom: 10px;
 }
 
+.detail-section .types {
+    font-size: 25px;
+    display: flex;
+    gap: 10px;
+}
+
+.detail-section .popup-stat {
+    font-size: 1em;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.detail-section p{
+    font-size: 1.1em;
+    margin: 8px 0;
+    text-transform: capitalize;
+}
+
 .detail-abilities {
     font-size: 1.1em;
-    color: #555;
+    color: #000000;
+}
+
+.detail-abilities h4 {
+    margin: 8px 0;
+    text-transform: capitalize;
 }
 
 .detail-abilities p {
     margin: 10px 0;
     text-transform: capitalize;
 }
+
+.detail-moves h4 {
+    font-size: 1.1em;
+    color: #000000;
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+   Bagian ini mengatur tampilan untuk perangkat mobile dan tablet
+   ========================================== */
 
 @media (max-width: 768px) {
     header h1 {
