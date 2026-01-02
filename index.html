@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Main Page -->
+    <div id="mainPage" class="page">
+        <div class="container">
+            <header>
+                <h1>Pokédex</h1>
+                <div class="search-container">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Search Pokémon by name or ID..."
+                        autocomplete="off"
+                    >
+                </div>
+            </header>
+
+            <div class="filter-section">
+                <h3>Filter by Type</h3>
+                <div id="typeFilter" class="type-filter"></div>
+            </div>
+
+            <main>
+                <div id="pokemonGrid" class="pokemon-grid"></div>
+                <button id="loadMore" class="load-more-btn">Load More</button>
+            </main>
+        </div>
+    </div>
+
+    <!-- Detail Page -->
+    <div id="detailPage" class="page" style="display: none;">
+        <div class="container">
+            <button id="backBtn" class="back-btn">← Back to Pokédex</button>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <!-- Hover Popup -->
+    <div id="hoverPopup" class="hover-popup">
+        <div id="hoverContent"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
