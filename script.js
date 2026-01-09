@@ -2,24 +2,10 @@
  * ===============================================
  * POKÉMON JURNAL - MAIN APPLICATION SCRIPT
  * ===============================================
- * 
- * STRUKTUR KODE:
- * 1. Konstanta dan Konfigurasi
- * 2. Variabel Global & State Management
- * 3. Referensi Elemen DOM
- * 4. Filter Generation Mapping
- * 5. Inisialisasi Aplikasi & Event Listeners
- * 6. Fungsi Routing & Navigation
- * 7. Fungsi Filter (Tipe & Generasi)
- * 8. Fungsi Pemuatan Data Pokemon
- * 9. Fungsi Tampilan Grid
- * 10. Fungsi Card & Popup
- * 11. Fungsi Detail Page
- * 12. Fungsi Pencarian
  */
 
 // ==========================================
-// BAGIAN 1: KONSTANTA KONFIGURASI
+// KONFIGURASI
 // ==========================================
 
 const API_URL = 'https://pokeapi.co/api/v2';
