@@ -386,7 +386,6 @@ async function showDetailPage(pokemon) {
 
     // State & cache untuk moves
     const movesLimit = 30;
-    let showAllMoves = false;
     const moveDetailsCache = new Map(); // key: move.url, value: json
 
     // Ambil detail ability untuk tooltip
@@ -450,10 +449,7 @@ async function showDetailPage(pokemon) {
             </div>
 
             <div class="detail-section">
-                <div class="moves-header">
-                    <h3>Moves</h3>
-                    <button id="toggleMovesBtn" class="toggle-moves-btn">Show all</button>
-                </div>
+                <h3>Moves</h3>
                 <div class="detail-moves">
                     <table class="move-table">
                         <thead>
@@ -479,7 +475,7 @@ async function showDetailPage(pokemon) {
     // Render helper untuk moves
     async function renderMoves() {
         const tbody = document.getElementById('movesTbody');
-        const list = showAllMoves ? levelUpMovesSorted : levelUpMovesSorted.slice(0, movesLimit);
+        const list = levelUpMovesSorted.slice(0, movesLimit);
 
         // Fetch details bila belum ada di cache
         const missing = list.filter(m => !moveDetailsCache.has(m.move.url));
@@ -537,14 +533,6 @@ async function showDetailPage(pokemon) {
             el.addEventListener('mouseleave', hideMoveTooltip);
         });
     }
-
-    // Toggle button
-    const toggleBtn = document.getElementById('toggleMovesBtn');
-    toggleBtn.addEventListener('click', async () => {
-        showAllMoves = !showAllMoves;
-        toggleBtn.textContent = showAllMoves ? 'Show less' : 'Show all';
-        await renderMoves();
-    });
 
     // Render awal (cap 30)
     await renderMoves();
