@@ -2,38 +2,51 @@
  * ===============================================
  * POKÉMON JURNAL - MAIN APPLICATION SCRIPT
  * ===============================================
+ * Aplikasi interaktif untuk browsing dan mencari data Pokémon
+ * menggunakan PokéAPI (https://pokeapi.co/)
  * 
- * STRUKTUR KODE:
- * 1. Konstanta dan Konfigurasi
- * 2. Variabel Global & State Management
- * 3. Referensi Elemen DOM
- * 4. Filter Generation Mapping
- * 5. Inisialisasi Aplikasi & Event Listeners
- * 6. Fungsi Routing & Navigation
- * 7. Fungsi Filter (Tipe & Generasi)
- * 8. Fungsi Pemuatan Data Pokemon
- * 9. Fungsi Tampilan Grid
- * 10. Fungsi Card & Popup
- * 11. Fungsi Detail Page
- * 12. Fungsi Pencarian
+ * Fitur Utama:
+ * - Menampilkan daftar Pokémon dalam grid
+ * - Filter berdasarkan tipe dan generasi
+ * - Pencarian berdasarkan nama atau ID
+ * - Tampilan detail lengkap Pokémon (stats, moves, abilities)
+ * - Hover popup dengan informasi singkat
+ * - Tooltip interaktif untuk moves dan abilities
  */
 
 // ==========================================
-// BAGIAN 1: KONSTANTA KONFIGURASI
+// KONSTANTA KONFIGURASI
 // ==========================================
 
+/** URL base API untuk mengakses data Pokémon */
 const API_URL = 'https://pokeapi.co/api/v2';
-// Batas jumlah Pokemon yang ditampilkan per batch
+
+/** 
+ * Jumlah Pokémon yang dimuat per satu kali "Load More"
+ * Gunakan nilai ini untuk mengontrol performa aplikasi
+ */
 const displayLimit = 50;
-// Array untuk menyimpan semua data Pokemon yang telah dimuat
+
+// ==========================================
+// VARIABEL GLOBAL - STATE MANAGEMENT
+// ==========================================
+
+/** Array menyimpan semua data Pokémon yang sudah di-fetch dari API */
 let allPokemon = [];
-// Jumlah Pokemon yang sudah ditampilkan di grid
+
+/** Counter untuk melacak berapa banyak Pokémon yang sudah ditampilkan di grid */
 let displayedCount = 0;
-// Flag untuk menandai apakah sedang loading data
+
+/** Flag untuk mencegah multiple loading requests saat data sedang di-fetch */
 let isLoading = false;
-// Array untuk menyimpan tipe-tipe Pokemon yang dipilih untuk filter
+
+/** Array menyimpan tipe Pokémon yang user pilih untuk filter (misal: ['fire', 'water']) */
 let selectedTypes = [];
-// Daftar semua tipe Pokemon yang tersedia
+
+/**
+ * Daftar semua tipe Pokémon yang tersedia dalam aplikasi
+ * Digunakan untuk membuat tombol filter tipe dinamis
+ */
 const pokemonTypes = [
     'normal', 'fire', 'water', 'grass', 'electric', 'ice', 'fighting', 'poison',
     'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy'
@@ -43,20 +56,26 @@ const pokemonTypes = [
 // REFERENSI ELEMEN DOM
 // ==========================================
 
-// Elemen-elemen DOM yang digunakan dalam aplikasi
-const pokemonGrid = document.getElementById('pokemonGrid');
-const searchInput = document.getElementById('searchInput');
-const loadMoreBtn = document.getElementById('loadMore');
-const typeFilter = document.getElementById('typeFilter');
-const generationFilter = document.getElementById('generationFilter');
-const mainPage = document.getElementById('mainPage');
-const detailPage = document.getElementById('detailPage');
-const backBtn = document.getElementById('backBtn');
-const hoverPopup = document.getElementById('hoverPopup');
-const hoverContent = document.getElementById('hoverContent');
-const detailContent = document.getElementById('detailContent');
+/** 
+ * Elemen-elemen DOM yang digunakan dalam aplikasi
+ * Referensi ini diambil sekali saat aplikasi dimulai untuk performa lebih baik
+ */
+const pokemonGrid = document.getElementById('pokemonGrid');          // Container grid untuk kartu Pokemon
+const searchInput = document.getElementById('searchInput');          // Input field untuk pencarian
+const loadMoreBtn = document.getElementById('loadMore');            // Tombol untuk load Pokemon lebih banyak
+const typeFilter = document.getElementById('typeFilter');          // Container tombol filter tipe
+const generationFilter = document.getElementById('generationFilter'); // Container tombol filter generasi
+const mainPage = document.getElementById('mainPage');              // Halaman utama dengan grid
+const detailPage = document.getElementById('detailPage');          // Halaman detail Pokemon
+const backBtn = document.getElementById('backBtn');                // Tombol kembali dari detail
+const hoverPopup = document.getElementById('hoverPopup');          // Popup info ketika hover kartu
+const hoverContent = document.getElementById('hoverContent');      // Konten dalam hover popup
+const detailContent = document.getElementById('detailContent');    // Konten detail Pokemon
 
-// Tooltip untuk efek move
+/**
+ * Elemen tooltip untuk menampilkan deskripsi move dan ability
+ * Tooltip ini di-reuse untuk semua deskripsi agar efisien
+ */
 const moveTooltip = document.createElement('div');
 moveTooltip.id = 'moveTooltip';
 moveTooltip.className = 'move-tooltip';
@@ -69,14 +88,40 @@ moveTooltip.style.borderRadius = '6px';
 moveTooltip.style.fontSize = '12px';
 moveTooltip.style.maxWidth = '260px';
 moveTooltip.style.display = 'none';
-moveTooltip.style.zIndex = '2000';
 document.body.appendChild(moveTooltip);
 
-// Flag untuk menandai apakah sedang hover pada kartu Pokemon
+// ==========================================
+// FLAG DAN STATE MANAGEMENT
+// ==========================================
+
+/** Flag untuk melacak apakah user sedang hover kartu Pokemon */
 let isHoveringCard = false;
 
-// Filter generasi
+// ==========================================
+// FILTER GENERASI - RANGE ID POKEMON PER GENERASI
+// ==========================================
+
+/** 
+ * Array untuk menyimpan generasi yang dipilih user
+ * Contoh: ['Generation I', 'Generation II']
+ */
 let selectedGenerations = [];
+
+/**
+ * Mapping range ID Pokémon untuk setiap generasi
+ * Digunakan untuk filter Pokémon berdasarkan generasi
+ * Struktur: { label: 'Nama Generasi', min: ID_min, max: ID_max }
+ * 
+ * Gen I (Kanto):     1-151   - Red/Blue/Yellow
+ * Gen II (Johto):    152-251 - Gold/Silver/Crystal
+ * Gen III (Hoenn):   252-386 - Ruby/Sapphire
+ * Gen IV (Sinnoh):   387-493 - Diamond/Pearl
+ * Gen V (Unova):     494-649 - Black/White
+ * Gen VI (Kalos):    650-721 - X/Y
+ * Gen VII (Alola):   722-809 - Sun/Moon
+ * Gen VIII (Galar):  810-898 - Sword/Shield
+ * Gen IX (Paldea):   899-1010- Scarlet/Violet
+ */
 const generationRanges = [
     { label: 'Generation I', min: 1, max: 151 },
     { label: 'Generation II', min: 152, max: 251 },
@@ -89,116 +134,6 @@ const generationRanges = [
     { label: 'Generation IX', min: 899, max: 1010 }
 ];
 
-// ==========================================
-// INISIALISASI APLIKASI
-// ==========================================
-
-// Inisialisasi aplikasi: memuat data Pokemon, mengatur filter tipe, dan routing
-loadAndDisplayPokemon();
-initializeTypeFilters();
-initializeGenerationFilters();
-setupRouting();
-
-// ==========================================
-// EVENT LISTENERS
-// ==========================================
-
-// Event listener untuk pencarian Pokemon
-searchInput.addEventListener('input', handleSearch);
-// Event listener untuk tombol load more
-loadMoreBtn.addEventListener('click', loadMoreDisplay);
-
-// Event listener untuk tombol kembali ke halaman utama
-backBtn.addEventListener('click', () => {
-    mainPage.style.display = 'block';
-    detailPage.style.display = 'none';
-    
-    // Update URL di browser bar (tanpa reload)
-    window.history.pushState(
-        null, 
-        '', 
-        window.location.origin + window.location.pathname.split('/pokemon')[0]
-    );
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-// Event listener untuk menggerakkan popup hover mengikuti mouse
-document.addEventListener('mousemove', (e) => {
-    if (isHoveringCard) {
-        hoverPopup.style.left = (e.clientX + 15) + 'px';
-        hoverPopup.style.top = (e.clientY - 150) + 'px';
-    }
-});
-
-// Event listener untuk menangani navigasi browser (back/forward)
-window.addEventListener('popstate', setupRouting);
-
-// ==========================================
-// FUNGSI ROUTING
-// ==========================================
-
-function setupRouting() {
-    // Ambil informasi URL
-    const path = window.location.pathname;
-    const searchParams = new window.URLSearchParams(window.location.search);
-    
-    // Handle redirect dari 404.html
-    // Format: /?/pokemon/pikachu (diubah dari /pokemon/pikachu)
-    const pokemonPath = searchParams.get('/');
-    
-    // Cek apakah user membuka halaman detail Pokemon
-    if (pokemonPath && pokemonPath.startsWith('pokemon/')) {
-        // Extract nama Pokemon dari URL
-        const pokemonName = decodeURIComponent(pokemonPath.split('/')[1]);
-        
-        // Cari Pokemon di allPokemon array (case-insensitive)
-        const pokemon = allPokemon.find(
-            p => p.name.toLowerCase() === pokemonName.toLowerCase()
-        );
-        
-        // Jika Pokemon ditemukan, tampilkan halaman detail
-        if (pokemon) {
-            showDetailPage(pokemon);
-        } else {
-            // Jika tidak ditemukan, tampilkan grid (fallback)
-            mainPage.style.display = 'block';
-            detailPage.style.display = 'none';
-        }
-    } else {
-        // Tampilkan halaman grid (default)
-        mainPage.style.display = 'block';
-        detailPage.style.display = 'none';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-}
-
-// ==========================================
-// FUNGSI FILTER TIPE POKEMON
-// ==========================================
-
-// Fungsi untuk membuat tombol filter berdasarkan tipe Pokemon
-function initializeTypeFilters() {
-    pokemonTypes.forEach(type => {
-        const btn = document.createElement('button');
-        btn.className = `filter-btn type-${type}`;
-        btn.textContent = type;
-        btn.addEventListener('click', () => toggleTypeFilter(type, btn));
-        typeFilter.appendChild(btn);
-    });
-}
-
-// Fungsi untuk membuat tombol filter berdasarkan generasi Pokemon
-function initializeGenerationFilters() {
-    generationRanges.forEach(range => {
-        const btn = document.createElement('button');
-        btn.className = 'filter-btn generation-btn';
-        btn.textContent = range.label;
-        btn.addEventListener('click', () => toggleGenerationFilter(range.label, btn));
-        generationFilter.appendChild(btn);
-    });
-}
-
 // Fungsi untuk toggle filter tipe Pokemon
 function toggleTypeFilter(type, btn) {
     if (selectedTypes.includes(type)) {
@@ -209,7 +144,6 @@ function toggleTypeFilter(type, btn) {
         btn.classList.add('active');
     }
     
-    // Reset grid dan tampilkan Pokemon sesuai filter baru
     pokemonGrid.innerHTML = '';
     displayedCount = 0;
     loadMoreDisplay();
@@ -225,24 +159,17 @@ function toggleGenerationFilter(label, btn) {
         btn.classList.add('active');
     }
 
-    // Reset grid dan tampilkan Pokemon sesuai filter baru
     pokemonGrid.innerHTML = '';
     displayedCount = 0;
     loadMoreDisplay();
 }
 
 function isInSelectedGeneration(pokemonId) {
-    // Jika tidak ada filter generasi, tampilkan semua Pokemon
     if (selectedGenerations.length === 0) {
         return true;
     }
 
-    // Cari generasi yang mencakup pokemonId
-    const generation = generationRanges.find(
-        range => pokemonId >= range.min && pokemonId <= range.max
-    );
-    
-    // Return true jika generasi ditemukan dan ada di filter terpilih
+    const generation = generationRanges.find(range => pokemonId >= range.min && pokemonId <= range.max);
     return generation ? selectedGenerations.includes(generation.label) : false;
 }
 
@@ -261,34 +188,25 @@ async function loadAndDisplayPokemon() {
         
         const batchSize = 100;
         for (let offset = 0; offset < totalCount; offset += batchSize) {
-            // Fetch listing Pokemon (hanya basic info)
             const response = await fetch(
                 `${API_URL}/pokemon?offset=${offset}&limit=${batchSize}`
             );
             const data = await response.json();
             
-            // setiap Pokemon di listing, fetch detail lengkapnya
-            // Promise.all() menjalankan semua fetch secara parallel
             const pokemonPromises = data.results.map(pokemon => 
                 fetch(pokemon.url).then(r => r.json())
             );
             
-            // Tunggu semua fetch selesai
             const pokemonDetails = await Promise.all(pokemonPromises);
-            
-            // Tambahkan ke allPokemon array
             allPokemon.push(...pokemonDetails);
             
-            // Tampilkan batch pertama segera setelah selesai
             if (offset === 0) {
                 loadMoreDisplay();
             }
         }
     } catch (error) {
-        // Log error jika fetch gagal
         console.error('Error loading Pokémon:', error);
     } finally {
-        // Selalu set isLoading = false (baik berhasil atau error)
         isLoading = false;
     }
 }
@@ -302,9 +220,7 @@ function loadMoreDisplay() {
     let pokemonToDisplay = allPokemon;
 
     if (selectedGenerations.length > 0) {
-        pokemonToDisplay = pokemonToDisplay.filter(pokemon => 
-            isInSelectedGeneration(pokemon.id)
-        );
+        pokemonToDisplay = pokemonToDisplay.filter(pokemon => isInSelectedGeneration(pokemon.id));
     }
 
     if (selectedTypes.length > 0) {
@@ -342,11 +258,9 @@ function createPokemonCard(pokemon) {
     const card = document.createElement('div');
     card.className = 'pokemon-card';
     
-    // Ambil gambar Pokemon (pilih official artwork, fallback ke sprite biasa)
     const imageUrl = pokemon.sprites.other['official-artwork'].front_default || 
                      pokemon.sprites.front_default;
     
-    // Set HTML konten card
     card.innerHTML = `
         <img src="${imageUrl}" alt="${pokemon.name}">
         <h3>${pokemon.name}</h3>
@@ -358,19 +272,14 @@ function createPokemonCard(pokemon) {
         </div>
     `;
     
-    // EVENT 1: Mouse enter (hover)
     card.addEventListener('mouseenter', (e) => {
         isHoveringCard = true;
         showHoverPopup(pokemon, e);
     });
-    
-    // EVENT 2: Mouse leave (hover out)
     card.addEventListener('mouseleave', () => {
         isHoveringCard = false;
         hideHoverPopup();
     });
-    
-    // EVENT 3: Click card
     card.addEventListener('click', () => showDetailPage(pokemon));
     
     return card;
@@ -382,11 +291,9 @@ function createPokemonCard(pokemon) {
 
 // Fungsi untuk menampilkan popup hover dengan informasi Pokemon
 function showHoverPopup(pokemon, event) {
-    // Ambil gambar Pokemon
     const imageUrl = pokemon.sprites.other['official-artwork'].front_default || 
                      pokemon.sprites.front_default;
     
-    // Generate HTML untuk popup
     hoverContent.innerHTML = `
         <div class="popup-header">
             <h2>${pokemon.name}</h2>
@@ -412,10 +319,7 @@ function showHoverPopup(pokemon, event) {
         </div>
     `;
     
-    // Tambah class 'show' (untuk visibility)
     hoverPopup.classList.add('show');
-    
-    // Set posisi popup relative terhadap cursor
     hoverPopup.style.left = (event.clientX + 15) + 'px';
     hoverPopup.style.top = (event.clientY + 15) + 'px';
 }
@@ -443,7 +347,6 @@ function hideMoveTooltip() {
 
 // Fungsi untuk menampilkan halaman detail Pokemon
 async function showDetailPage(pokemon) {
-    // Ambil gambar Pokemon
     const imageUrl = pokemon.sprites.other['official-artwork'].front_default || 
                      pokemon.sprites.front_default;
 
@@ -451,23 +354,20 @@ async function showDetailPage(pokemon) {
     const levelUpMovesSorted = pokemon.moves
         .filter(m => m.version_group_details.some(v => v.move_learn_method.name === 'level-up'))
         .map(m => {
-            // Extract level yang dipelajari dari berbagai game version
             const levels = m.version_group_details
                 .map(v => v.level_learned_at)
                 .filter(l => l > 0);
-            // Cari level minimal (dalam hal ada perbedaan antar generation)
             const minLevel = levels.length ? Math.min(...levels) : Infinity;
             return { ...m, _level: minLevel };
         })
-        // Sort berdasarkan level (ascending), jika level sama sort by nama
         .sort((a, b) => {
             if (a._level === b._level) return a.move.name.localeCompare(b.move.name);
             return a._level - b._level;
         });
 
-    // STEP 2: Setup cache untuk detail move
-    const movesLimit = 30; // Tampilkan max 30 moves
-    const moveDetailsCache = new Map(); // key: move.url, value: move detail JSON
+    // State & cache untuk moves
+    const movesLimit = 30;
+    const moveDetailsCache = new Map(); // key: move.url, value: json
 
     // Ambil detail ability untuk tooltip
     const abilityDetails = await Promise.all(pokemon.abilities.map(async (ab) => {
@@ -480,19 +380,15 @@ async function showDetailPage(pokemon) {
         }
     }));
 
-    // Generate HTML untuk abilities dengan tooltip
     const abilitiesHtml = pokemon.abilities.map((ab, idx) => {
         const abData = abilityDetails[idx];
         const name = abData?.name || ab.ability.name;
-        // Cari effect description untuk tooltip
         const effectEntry = abData?.effect_entries?.find(entry => entry.language.name === 'en');
         const effectText = effectEntry ? effectEntry.short_effect : 'No effect text available.';
-        // Mark hidden ability dengan special styling
         const hiddenMark = ab.is_hidden ? ' <span class="ability-hidden">(hidden)</span>' : '';
         return `<h4><span class="ability-name" data-effect="${(effectText || '').replace(/"/g, '&quot;')}">${name}</span>${hiddenMark}</h4>`;
     }).join('');
     
-    // Generate HTML untuk detail page
     detailContent.innerHTML = `
         <div class="detail-page-content">
             <div class="detail-header">
@@ -540,7 +436,7 @@ async function showDetailPage(pokemon) {
                         <thead>
                             <tr>
                                 <th>Nama Move</th>
-                                <th class="num">Level</th>
+                                <th class="num">Level Didapat</th>
                                 <th class="num">Power</th>
                                 <th class="num">Accuracy</th>
                                 <th class="num">PP</th>
@@ -557,12 +453,33 @@ async function showDetailPage(pokemon) {
         </div>
     `;
 
-    // STEP 6: Helper function untuk render moves
+    // Tooltip untuk header kolom moves
+    function bindHeaderTooltips() {
+        const headerTips = [
+            null,
+            'Level Didapat: level saat Pokémon mempelajari move (level-up).',
+            'Power: kekuatan dasar move (— untuk status atau tidak ada).',
+            'Accuracy: peluang mengenai target dalam persen (— bila tidak berlaku).',
+            'PP: jumlah penggunaan move sebelum dipulihkan.',
+            'Type: elemen tipe move (fire, water, dll).',
+            'Damage Class: physical/special/status — jenis dampak move.'
+        ];
+        const ths = detailContent.querySelectorAll('.move-table thead th');
+        ths.forEach((th, idx) => {
+            const tip = headerTips[idx];
+            if (!tip) return;
+            th.addEventListener('mouseenter', (evt) => showMoveTooltip(tip, evt.clientX, evt.clientY));
+            th.addEventListener('mousemove', (evt) => showMoveTooltip(tip, evt.clientX, evt.clientY));
+            th.addEventListener('mouseleave', hideMoveTooltip);
+        });
+    }
+
+    // Render helper untuk moves
     async function renderMoves() {
         const tbody = document.getElementById('movesTbody');
         const list = levelUpMovesSorted.slice(0, movesLimit);
 
-        // Fetch detail move yang belum ada di cache
+        // Fetch details bila belum ada di cache
         const missing = list.filter(m => !moveDetailsCache.has(m.move.url));
         if (missing.length) {
             const fetched = await Promise.all(missing.map(async m => {
@@ -578,7 +495,6 @@ async function showDetailPage(pokemon) {
             fetched.forEach(([url, json]) => moveDetailsCache.set(url, json));
         }
 
-        // Generate HTML untuk setiap move
         const rowsHtml = list.map(moveInfo => {
             const moveData = moveDetailsCache.get(moveInfo.move.url);
             const levelLearn = Number.isFinite(moveInfo._level) ? moveInfo._level : '—';
@@ -588,7 +504,6 @@ async function showDetailPage(pokemon) {
             const pp = moveData?.pp ?? '—';
             const type = moveData?.type?.name ?? '—';
             const damageClass = moveData?.damage_class?.name ?? '—';
-            // Cari effect description untuk move name tooltip
             const effectEntry = moveData?.effect_entries?.find(entry => entry.language.name === 'en');
             const effectText = effectEntry ? effectEntry.short_effect : 'No effect text available.';
 
@@ -628,44 +543,26 @@ async function showDetailPage(pokemon) {
             if (v === 'status') return 'Status: tidak memberi damage langsung; memberi efek.';
             return 'Damage Class move.';
         };
-
-        // Helper untuk tooltip setiap kolom
         const getCellTooltip = (colIndex, text) => {
-            const t = text === undefined || text === null ? '—' : String(text).trim();
+            const t = text === undefined || text === null ? '—' : String(text);
             switch (colIndex) {
-                case 1: // Level Didapat
-                    return t === '—' ? 'Tidak dipelajari lewat level-up di versi ini.' : `Dipelajari pada level ${t}.`;
-                case 2: // Power
-                    return t === '—' ? 'Tidak ada power dasar (move status).' : `Power dasar: ${t}.`;
-                case 3: // Accuracy
-                    return t === '—' ? 'Akurasi tidak berlaku / selalu mengenai.' : `Akurasi: ${t}%.`;
-                case 4: // PP
-                    return t === '—' ? 'PP tidak tersedia.' : `Dapat digunakan ${t} kali sebelum perlu dipulihkan.`;
-                case 5: // Type
-                    return t === '—' ? 'Tipe move tidak diketahui.' : `Tipe move: ${t}.`;
-                case 6: // Damage Class
-                    return describeDamageClass(t);
-                default:
-                    return '';
+                case 1: return t === '—' ? 'Tidak dipelajari lewat level-up pada versi tertentu.' : `Dipelajari pada level ${t}.`;
+                case 2: return t === '—' ? 'Tidak memiliki power dasar (biasanya move status).' : `Power dasar: ${t}.`;
+                case 3: return t === '—' ? 'Akurasi tidak berlaku/selalu mengenai.' : `Akurasi: ${t}%.`;
+                case 4: return t === '—' ? 'PP tidak tersedia.' : `PP: dapat digunakan ${t} kali.`;
+                case 5: return t === '—' ? 'Tipe move tidak diketahui.' : `Tipe move: ${t}.`;
+                case 6: return describeDamageClass(t);
+                default: return '';
             }
         };
 
-        // Event delegation untuk tooltip kolom lain
+        // Hapus listener sebelumnya (dengan mengganti node reference)
+        const newTbody = tbody;
+        // Pasang listeners delegasi
         const onMouseOver = (evt) => {
             const td = evt.target.closest('td');
-            if (!td || !tbody.contains(td)) return;
-            if (td.querySelector('.move-name')) return; // Skip kolom move name (sudah di-handle)
-            const col = td.cellIndex;
-            if (col >= 1 && col <= 6) {
-                const text = td.textContent.trim();
-                const message = getCellTooltip(col, text);
-                if (message) showMoveTooltip(message, evt.clientX, evt.clientY);
-            }
-        };
-
-        const onMouseMove = (evt) => {
-            const td = evt.target.closest('td');
-            if (!td || !tbody.contains(td)) return;
+            if (!td || !newTbody.contains(td)) return;
+            // Abaikan kolom nama move (di-handle sendiri)
             if (td.querySelector('.move-name')) return;
             const col = td.cellIndex;
             if (col >= 1 && col <= 6) {
@@ -674,13 +571,23 @@ async function showDetailPage(pokemon) {
                 if (message) showMoveTooltip(message, evt.clientX, evt.clientY);
             }
         };
-
+        const onMouseMove = (evt) => {
+            const td = evt.target.closest('td');
+            if (!td || !newTbody.contains(td)) return;
+            if (td.querySelector('.move-name')) return;
+            const col = td.cellIndex;
+            if (col >= 1 && col <= 6) {
+                const text = td.textContent.trim();
+                const message = getCellTooltip(col, text);
+                if (message) showMoveTooltip(message, evt.clientX, evt.clientY);
+            }
+        };
         const onMouseLeave = () => hideMoveTooltip();
 
-        // Prevent multiple bindings dengan cloneNode
-        const parent = tbody.parentNode;
-        const cloned = tbody.cloneNode(true);
-        parent.replaceChild(cloned, tbody);
+        // Untuk mencegah multiple binding saat render ulang, reset dulu (dengan cloneNode)
+        const parent = newTbody.parentNode;
+        const cloned = newTbody.cloneNode(true);
+        parent.replaceChild(cloned, newTbody);
 
         // Pasang ulang binding move-name pada cloned tbody
         const moveNameEls2 = cloned.querySelectorAll('.move-name');
@@ -696,7 +603,7 @@ async function showDetailPage(pokemon) {
             el.addEventListener('mouseleave', hideMoveTooltip);
         });
 
-        // Delegasi untuk kolom lain
+        // Delegasi untuk kolom lainnya
         cloned.addEventListener('mouseover', onMouseOver);
         cloned.addEventListener('mousemove', onMouseMove);
         cloned.addEventListener('mouseleave', onMouseLeave);
@@ -705,26 +612,7 @@ async function showDetailPage(pokemon) {
     // Render awal (cap 30)
     await renderMoves();
 
-    // Bind tooltip untuk header kolom moves
-    function bindHeaderTooltips() {
-        const headerTips = [
-            null,
-            'Level: level saat Pokémon mempelajari move (level-up).',
-            'Power: kekuatan dasar move (— untuk status atau tidak ada).',
-            'Accuracy: peluang mengenai target dalam persen (— bila tidak berlaku).',
-            'PP: jumlah penggunaan move sebelum dipulihkan.',
-            'Type: elemen tipe move (fire, water, dll).',
-            'Damage Class: physical/special/status — jenis dampak move.'
-        ];
-        const ths = detailContent.querySelectorAll('.move-table thead th');
-        ths.forEach((th, idx) => {
-            const tip = headerTips[idx];
-            if (!tip) return;
-            th.addEventListener('mouseenter', (evt) => showMoveTooltip(tip, evt.clientX, evt.clientY));
-            th.addEventListener('mousemove', (evt) => showMoveTooltip(tip, evt.clientX, evt.clientY));
-            th.addEventListener('mouseleave', hideMoveTooltip);
-        });
-    }
+    // Header tooltips
     bindHeaderTooltips();
 
     // Tooltip untuk abilities
@@ -740,8 +628,7 @@ async function showDetailPage(pokemon) {
         });
         el.addEventListener('mouseleave', hideMoveTooltip);
     });
-
-    // Update halaman (tampilkan detail, sembunyikan grid)
+    
     mainPage.style.display = 'none';
     detailPage.style.display = 'block';
     window.history.pushState(null, '', `/pokemon/${pokemon.name}`);
@@ -758,21 +645,15 @@ async function showDetailPage(pokemon) {
 
 // Fungsi untuk menangani pencarian Pokemon berdasarkan nama atau ID
 function handleSearch(e) {
-    // Ambil search term dan konversi ke lowercase
     const searchTerm = e.target.value.toLowerCase();
-    
-    // Reset grid
     pokemonGrid.innerHTML = '';
     
-    // Mulai dari semua Pokemon
     let filtered = allPokemon;
 
-    // Apply filter generasi (jika ada)
     if (selectedGenerations.length > 0) {
         filtered = filtered.filter(pokemon => isInSelectedGeneration(pokemon.id));
     }
 
-    // Apply filter tipe (jika ada)
     if (selectedTypes.length > 0) {
         filtered = filtered.filter(pokemon =>
             selectedTypes.every(type =>
@@ -781,22 +662,19 @@ function handleSearch(e) {
         );
     }
     
-    // Apply search filter (jika ada search term)
     if (searchTerm !== '') {
         if (searchTerm === '#') {
-            // Hanya "#" = list all (tanpa filter ID)
         } else if (searchTerm.startsWith('#')) {
             // Pencarian berdasarkan ID Pokemon (angka setelah #)
             const idTerm = searchTerm.substring(1);
             const searchId = parseInt(idTerm);
             
             if (!isNaN(searchId)) {
-                // ID valid, filter by exact ID
                 filtered = filtered.filter(pokemon => 
                     pokemon.id === searchId
                 );
             } else {
-                // ID tidak valid, return kosong
+                // Jika bukan angka valid setelah #, tidak ada hasil
                 filtered = [];
             }
         } else {
@@ -807,12 +685,10 @@ function handleSearch(e) {
         }
     }
     
-    // Tampilkan semua hasil (tanpa pagination)
     filtered.forEach(pokemon => {
         const card = createPokemonCard(pokemon);
         pokemonGrid.appendChild(card);
     });
     
-    // Sembunyikan tombol Load More (hasil search sudah ditampilkan semuanya)
     loadMoreBtn.style.display = 'none';
 }
