@@ -26,6 +26,7 @@ const pokemonGrid = document.getElementById('pokemonGrid');
 const searchInput = document.getElementById('searchInput');
 const loadMoreBtn = document.getElementById('loadMore');
 const typeFilter = document.getElementById('typeFilter');
+const generationFilter = document.getElementById('generationFilter');
 const mainPage = document.getElementById('mainPage');
 const detailPage = document.getElementById('detailPage');
 const backBtn = document.getElementById('backBtn');
@@ -33,8 +34,37 @@ const hoverPopup = document.getElementById('hoverPopup');
 const hoverContent = document.getElementById('hoverContent');
 const detailContent = document.getElementById('detailContent');
 
+// Tooltip untuk efek move
+const moveTooltip = document.createElement('div');
+moveTooltip.id = 'moveTooltip';
+moveTooltip.className = 'move-tooltip';
+moveTooltip.style.position = 'fixed';
+moveTooltip.style.pointerEvents = 'none';
+moveTooltip.style.padding = '8px 10px';
+moveTooltip.style.background = 'rgba(0, 0, 0, 0.8)';
+moveTooltip.style.color = '#fff';
+moveTooltip.style.borderRadius = '6px';
+moveTooltip.style.fontSize = '12px';
+moveTooltip.style.maxWidth = '260px';
+moveTooltip.style.display = 'none';
+document.body.appendChild(moveTooltip);
+
 // Flag untuk menandai apakah sedang hover pada kartu Pokemon
 let isHoveringCard = false;
+
+// Filter generasi
+let selectedGenerations = [];
+const generationRanges = [
+    { label: 'Generation I', min: 1, max: 151 },
+    { label: 'Generation II', min: 152, max: 251 },
+    { label: 'Generation III', min: 252, max: 386 },
+    { label: 'Generation IV', min: 387, max: 493 },
+    { label: 'Generation V', min: 494, max: 649 },
+    { label: 'Generation VI', min: 650, max: 721 },
+    { label: 'Generation VII', min: 722, max: 809 },
+    { label: 'Generation VIII', min: 810, max: 898 },
+    { label: 'Generation IX', min: 899, max: 1010 }
+];
 
 // ==========================================
 // INISIALISASI APLIKASI
@@ -43,6 +73,7 @@ let isHoveringCard = false;
 // Inisialisasi aplikasi: memuat data Pokemon, mengatur filter tipe, dan routing
 loadAndDisplayPokemon();
 initializeTypeFilters();
+initializeGenerationFilters();
 setupRouting();
 
 // ==========================================
@@ -111,6 +142,17 @@ function initializeTypeFilters() {
     });
 }
 
+// Fungsi untuk membuat tombol filter berdasarkan generasi Pokemon
+function initializeGenerationFilters() {
+    generationRanges.forEach(range => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn generation-btn';
+        btn.textContent = range.label;
+        btn.addEventListener('click', () => toggleGenerationFilter(range.label, btn));
+        generationFilter.appendChild(btn);
+    });
+}
+
 // Fungsi untuk toggle filter tipe Pokemon
 function toggleTypeFilter(type, btn) {
     if (selectedTypes.includes(type)) {
@@ -124,6 +166,30 @@ function toggleTypeFilter(type, btn) {
     pokemonGrid.innerHTML = '';
     displayedCount = 0;
     loadMoreDisplay();
+}
+
+// Fungsi untuk toggle filter generasi Pokemon
+function toggleGenerationFilter(label, btn) {
+    if (selectedGenerations.includes(label)) {
+        selectedGenerations = selectedGenerations.filter(g => g !== label);
+        btn.classList.remove('active');
+    } else {
+        selectedGenerations.push(label);
+        btn.classList.add('active');
+    }
+
+    pokemonGrid.innerHTML = '';
+    displayedCount = 0;
+    loadMoreDisplay();
+}
+
+function isInSelectedGeneration(pokemonId) {
+    if (selectedGenerations.length === 0) {
+        return true;
+    }
+
+    const generation = generationRanges.find(range => pokemonId >= range.min && pokemonId <= range.max);
+    return generation ? selectedGenerations.includes(generation.label) : false;
 }
 
 // ==========================================
@@ -171,15 +237,19 @@ async function loadAndDisplayPokemon() {
 // Fungsi untuk menampilkan batch berikutnya dari Pokemon yang sudah di filter
 function loadMoreDisplay() {
     let pokemonToDisplay = allPokemon;
-    
+
+    if (selectedGenerations.length > 0) {
+        pokemonToDisplay = pokemonToDisplay.filter(pokemon => isInSelectedGeneration(pokemon.id));
+    }
+
     if (selectedTypes.length > 0) {
-        pokemonToDisplay = allPokemon.filter(pokemon => {
+        pokemonToDisplay = pokemonToDisplay.filter(pokemon => {
             return selectedTypes.every(type =>
                 pokemon.types.some(t => t.type.name === type)
             );
         });
     }
-    
+
     const nextBatch = pokemonToDisplay.slice(displayedCount, displayedCount + displayLimit);
     
     if (nextBatch.length === 0) {
@@ -278,14 +348,66 @@ function hideHoverPopup() {
     hoverPopup.classList.remove('show');
 }
 
+// Tooltip untuk efek move
+function showMoveTooltip(text, x, y) {
+    moveTooltip.textContent = text;
+    moveTooltip.style.left = (x + 12) + 'px';
+    moveTooltip.style.top = (y - 20) + 'px';
+    moveTooltip.style.display = 'block';
+}
+
+function hideMoveTooltip() {
+    moveTooltip.style.display = 'none';
+}
+
 // ==========================================
 // FUNGSI HALAMAN DETAIL POKEMON
 // ==========================================
 
 // Fungsi untuk menampilkan halaman detail Pokemon
-function showDetailPage(pokemon) {
+async function showDetailPage(pokemon) {
     const imageUrl = pokemon.sprites.other['official-artwork'].front_default || 
                      pokemon.sprites.front_default;
+
+    // Ambil daftar move yang dipelajari lewat level-up, urutkan ascending berdasarkan level
+    const levelUpMovesSorted = pokemon.moves
+        .filter(m => m.version_group_details.some(v => v.move_learn_method.name === 'level-up'))
+        .map(m => {
+            const levels = m.version_group_details
+                .map(v => v.level_learned_at)
+                .filter(l => l > 0);
+            const minLevel = levels.length ? Math.min(...levels) : Infinity;
+            return { ...m, _level: minLevel };
+        })
+        .sort((a, b) => {
+            if (a._level === b._level) return a.move.name.localeCompare(b.move.name);
+            return a._level - b._level;
+        });
+
+    // State & cache untuk moves
+    const movesLimit = 30;
+    let showAllMoves = false;
+    const moveDetailsCache = new Map(); // key: move.url, value: json
+
+    // Ambil detail ability untuk tooltip
+    const abilityDetails = await Promise.all(pokemon.abilities.map(async (ab) => {
+        try {
+            const res = await fetch(ab.ability.url);
+            return await res.json();
+        } catch (e) {
+            console.error('Error fetching ability detail:', e);
+            return null;
+        }
+    }));
+
+    const abilitiesHtml = pokemon.abilities.map((ab, idx) => {
+        const abData = abilityDetails[idx];
+        const name = abData?.name || ab.ability.name;
+        const effectEntry = abData?.effect_entries?.find(entry => entry.language.name === 'en');
+        const effectText = effectEntry ? effectEntry.short_effect : 'No effect text available.';
+        const hiddenMark = ab.is_hidden ? ' <span class="ability-hidden">(hidden)</span>' : '';
+        return `<h4><span class="ability-name" data-effect="${(effectText || '').replace(/"/g, '&quot;')}">${name}</span>${hiddenMark}</h4>`;
+    }).join('');
     
     detailContent.innerHTML = `
         <div class="detail-page-content">
@@ -323,20 +445,123 @@ function showDetailPage(pokemon) {
             <div class="detail-section">
                 <h3>Abilities</h3>
                 <div class="detail-abilities">
-                    ${pokemon.abilities.map(a => `<h4>${a.ability.name}</h4>`).join('')}
+                    ${abilitiesHtml}
                 </div>
             </div>
 
             <div class="detail-section">
-                <h3>Moves</h3>
+                <div class="moves-header">
+                    <h3>Moves</h3>
+                    <button id="toggleMovesBtn" class="toggle-moves-btn">Show all</button>
+                </div>
                 <div class="detail-moves">
-                    ${pokemon.moves
-                    .filter(m => m.version_group_details.some(v => v.move_learn_method.name === 'level-up'))
-                    .slice(0, 20).map(m => `<h4>${m.move.name}</h4>`).join('')}
+                    <table class="move-table">
+                        <thead>
+                            <tr>
+                                <th>Nama Move</th>
+                                <th class="num">Level Didapat</th>
+                                <th class="num">Power</th>
+                                <th class="num">Accuracy</th>
+                                <th class="num">PP</th>
+                                <th>Type</th>
+                                <th>Damage Class</th>
+                            </tr>
+                        </thead>
+                        <tbody id="movesTbody">
+                            <tr><td colspan="7">Loading moves…</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     `;
+
+    // Render helper untuk moves
+    async function renderMoves() {
+        const tbody = document.getElementById('movesTbody');
+        const list = showAllMoves ? levelUpMovesSorted : levelUpMovesSorted.slice(0, movesLimit);
+
+        // Fetch details bila belum ada di cache
+        const missing = list.filter(m => !moveDetailsCache.has(m.move.url));
+        if (missing.length) {
+            const fetched = await Promise.all(missing.map(async m => {
+                try {
+                    const res = await fetch(m.move.url);
+                    const json = await res.json();
+                    return [m.move.url, json];
+                } catch (e) {
+                    console.error('Error fetching move detail:', e);
+                    return [m.move.url, null];
+                }
+            }));
+            fetched.forEach(([url, json]) => moveDetailsCache.set(url, json));
+        }
+
+        const rowsHtml = list.map(moveInfo => {
+            const moveData = moveDetailsCache.get(moveInfo.move.url);
+            const levelLearn = Number.isFinite(moveInfo._level) ? moveInfo._level : '—';
+            const moveName = moveData?.name || moveInfo.move.name;
+            const power = moveData?.power ?? '—';
+            const accuracy = moveData?.accuracy ?? '—';
+            const pp = moveData?.pp ?? '—';
+            const type = moveData?.type?.name ?? '—';
+            const damageClass = moveData?.damage_class?.name ?? '—';
+            const effectEntry = moveData?.effect_entries?.find(entry => entry.language.name === 'en');
+            const effectText = effectEntry ? effectEntry.short_effect : 'No effect text available.';
+
+            return `
+                <tr>
+                    <td><span class="move-name" data-effect="${(effectText || '').replace(/"/g, '&quot;')}">${moveName}</span></td>
+                    <td class="num">${levelLearn}</td>
+                    <td class="num">${power}</td>
+                    <td class="num">${accuracy}</td>
+                    <td class="num">${pp}</td>
+                    <td>${type}</td>
+                    <td>${damageClass}</td>
+                </tr>
+            `;
+        }).join('');
+        tbody.innerHTML = rowsHtml || '<tr><td colspan="7">No moves available.</td></tr>';
+
+        // Bind tooltip untuk move names (dibuat ulang setiap render)
+        const moveNameEls = tbody.querySelectorAll('.move-name');
+        moveNameEls.forEach(el => {
+            el.addEventListener('mouseenter', (evt) => {
+                const effect = el.getAttribute('data-effect') || 'No effect text available.';
+                showMoveTooltip(effect, evt.clientX, evt.clientY);
+            });
+            el.addEventListener('mousemove', (evt) => {
+                const effect = el.getAttribute('data-effect') || 'No effect text available.';
+                showMoveTooltip(effect, evt.clientX, evt.clientY);
+            });
+            el.addEventListener('mouseleave', hideMoveTooltip);
+        });
+    }
+
+    // Toggle button
+    const toggleBtn = document.getElementById('toggleMovesBtn');
+    toggleBtn.addEventListener('click', async () => {
+        showAllMoves = !showAllMoves;
+        toggleBtn.textContent = showAllMoves ? 'Show less' : 'Show all';
+        await renderMoves();
+    });
+
+    // Render awal (cap 30)
+    await renderMoves();
+
+    // Tooltip untuk abilities
+    const abilityEls = detailContent.querySelectorAll('.ability-name');
+    abilityEls.forEach(el => {
+        el.addEventListener('mouseenter', (evt) => {
+            const effect = el.getAttribute('data-effect') || 'No effect text available.';
+            showMoveTooltip(effect, evt.clientX, evt.clientY);
+        });
+        el.addEventListener('mousemove', (evt) => {
+            const effect = el.getAttribute('data-effect') || 'No effect text available.';
+            showMoveTooltip(effect, evt.clientX, evt.clientY);
+        });
+        el.addEventListener('mouseleave', hideMoveTooltip);
+    });
     
     mainPage.style.display = 'none';
     detailPage.style.display = 'block';
@@ -358,7 +583,11 @@ function handleSearch(e) {
     pokemonGrid.innerHTML = '';
     
     let filtered = allPokemon;
-    
+
+    if (selectedGenerations.length > 0) {
+        filtered = filtered.filter(pokemon => isInSelectedGeneration(pokemon.id));
+    }
+
     if (selectedTypes.length > 0) {
         filtered = filtered.filter(pokemon =>
             selectedTypes.every(type =>
