@@ -10,15 +10,15 @@ https://hfdz-ptr.github.io/poke-jurnal/
 
 ##  Fitur Utama
 
-- ✅ **Browse Grid Pokémon** - Tampilan grid responsif dengan kartu Pokémon
-- ✅ **Filter Berdasarkan Tipe** - Filter dengan mode AND/OR untuk kombinasi tipe
-- ✅ **Filter Berdasarkan Generasi** - Tampilkan Pokémon dari generasi spesifik (Gen I-IX)
-- ✅ **Pencarian Real-time** - Cari nama Pokémon atau ID dengan instant results
-- ✅ **Detail Lengkap** - Lihat stats, abilities, moves, height, weight setiap Pokémon
-- ✅ **Hover Popup** - Preview singkat saat hover kartu Pokémon
-- ✅ **Tooltip Interaktif** - Deskripsi move, ability, dan kolom tabel saat hover
-- ✅ **Responsive Design** - Bekerja dengan baik di desktop, tablet, dan mobile
-- ✅ **Browser History** - Support tombol back/forward untuk navigasi
+- **Browse Grid Pokémon** - Tampilan grid responsif dengan kartu Pokémon
+- **Filter Berdasarkan Tipe** - Filter dengan mode AND/OR untuk kombinasi tipe
+- **Filter Berdasarkan Generasi** - Tampilkan Pokémon dari generasi spesifik (Gen I-IX)
+- **Pencarian Real-time** - Cari nama Pokémon atau ID dengan instant results
+- **Detail Lengkap** - Lihat stats, abilities, moves, height, weight setiap Pokémon
+- **Hover Popup** - Preview singkat saat hover kartu Pokémon
+- **Tooltip Interaktif** - Deskripsi move, ability, dan kolom tabel saat hover
+- **Responsive Design** - Bekerja dengan baik di desktop, tablet, dan mobile
+- **Browser History** - Support tombol back/forward untuk navigasi
 
 ---
 
