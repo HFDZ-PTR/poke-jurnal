@@ -4,6 +4,10 @@
 
 ---
 
+https://hfdz-ptr.github.io/poke-jurnal/
+
+---
+
 ##  Fitur Utama
 
 - ✅ **Browse Grid Pokémon** - Tampilan grid responsif dengan kartu Pokémon
