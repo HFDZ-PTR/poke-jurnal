@@ -18,7 +18,6 @@ https://hfdz-ptr.github.io/poke-jurnal/
 - **Hover Popup** - Preview singkat saat hover kartu Pokémon
 - **Tooltip Interaktif** - Deskripsi move, ability, dan kolom tabel saat hover
 - **Responsive Design** - Bekerja dengan baik di desktop, tablet, dan mobile
-- **Browser History** - Support tombol back/forward untuk navigasi
 
 ---
 
